@@ -11,9 +11,9 @@ Downloaded September 27, 2026. These are simplified game maps, not current autho
 ## Game scopes
 
 - Western Europe: 13 selected countries.
-- Africa: 54 countries plus Western Sahara as depicted by Natural Earth. Somaliland is grouped with Somalia; their internal seam is excluded. Territorial depiction is a dataset convention, not a statement on sovereignty.
+- Maghreb & neighbours (`africa`): Morocco, Algeria, Tunisia, Libya, Mauritania, Mali, Niger, Egypt and Western Sahara as depicted by Natural Earth. Territorial depiction is a dataset convention, not a statement on sovereignty.
 - South America: 12 countries plus French Guiana (label GF); no island dependencies outside that selection.
-- USA: 48 contiguous states. Alaska, Hawaii, DC, and overseas territories are excluded. Point-only contacts do not count as shared borders.
+- Northeastern USA (`usa`): Connecticut, Maine, Massachusetts, New Hampshire, New Jersey, New York, Pennsylvania, Rhode Island and Vermont. All other states and territories are excluded. Point-only contacts do not count as shared borders.
 - France: 13 metropolitan regions, including Corsica. Overseas regions are excluded. Corsica has no shared land boundary to draw.
 
 ## Middle-earth fan map

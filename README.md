@@ -11,12 +11,12 @@ Choose a map from the selector. Each map keeps its current attempt while you swi
 | Map ID | Scope | Shared borders | Scoring tolerance | Recognition tolerance |
 | --- | --- | ---: | ---: | ---: |
 | `europe` | 13 Western European countries | 19 | 25 km | 75 km |
-| `africa` | 54 countries + Western Sahara | 107 | 60 km | 180 km |
+| `africa` | Maghreb & neighbours: 8 countries + Western Sahara | 14 | 40 km | 120 km |
 | `south-america` | 12 countries + French Guiana | 25 | 50 km | 150 km |
-| `usa` | 48 contiguous US states | 105 | 25 km | 75 km |
+| `usa` | Northeastern USA: 9 states | 13 | 12 km | 36 km |
 | `france` | 13 metropolitan French regions | 23 | 10 km | 30 km |
 
-Country/state codes and regional abbreviations provide hints. Only shared boundaries between selected areas count; point-only contacts and coastlines do not. Islands without shared borders need no drawing. Alaska, Hawaii, DC, US territories, and overseas French regions are outside these map scopes.
+Country/state codes and regional abbreviations provide hints. Only shared boundaries between selected areas count; point-only contacts and coastlines do not. Islands without shared borders need no drawing. The US map includes New England, New York, New Jersey and Pennsylvania. The Maghreb map includes Morocco, Algeria, Tunisia, Libya, Mauritania, Mali, Niger, Egypt and Western Sahara. Other US states and African countries, and overseas French regions, are outside these scopes. The `usa` and `africa` link IDs are retained for existing links.
 
 ## Middle-earth
 

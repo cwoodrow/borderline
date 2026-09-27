@@ -12,60 +12,14 @@ const europe=entries(`620 PT -8.1 39.6
 208 DK 9.4 56.3
 826 UK -2.7 54.1
 372 IE -8 53.4`);
-const africa=entries(`012 DZ 2 28
-024 AO 18 -12
-204 BJ 2.3 9.5
-072 BW 24 -22
-854 BF -1.5 12.5
-108 BI 29.9 -3.4
-120 CM 12 5.5
-132 CV -24 16
-140 CF 20.5 6.5
-148 TD 19 15
-174 KM 44 -12
-178 CG 15 -1
-180 CD 23 -3
-262 DJ 42.6 11.7
-818 EG 29 27
-226 GQ 10.3 1.5
-232 ER 39 15.5
-748 SZ 31.5 -26.5
-231 ET 39 8
-266 GA 11.8 -1
-270 GM -15.5 13.5
-288 GH -1.2 7.8
-324 GN -10.8 10.5
-624 GW -15 12
-384 CI -5.5 7.5
-404 KE 38 0
-426 LS 28.3 -29.5
-430 LR -9.5 6.4
+const maghreb=entries(`012 DZ 2 28
 434 LY 18 27
-450 MG 47 -19
-454 MW 34 -13
+818 EG 29 27
 466 ML -4 18
 478 MR -11 21
-480 MU 57.5 -20.2
 504 MA -6 32
-508 MZ 35 -18
-516 NA 17 -22
 562 NE 9 17
-566 NG 8 9
-646 RW 29.9 -1.8
-678 ST 6.6 0.3
-686 SN -14.5 15
-690 SC 55.5 -4.7
-694 SL -11.8 8.5
-706 SO 47 6
-710 ZA 24 -30
-728 SS 30 7
-729 SD 30 16
-834 TZ 35 -6
-768 TG 1 8.5
 788 TN 9.5 34
-800 UG 32.3 1.5
-894 ZM 28 -14
-716 ZW 30 -19
 732 EH -13 24.5`);
 const southAmerica=entries(`032 AR -64 -36
 068 BO -64 -17
@@ -80,54 +34,15 @@ const southAmerica=entries(`032 AR -64 -36
 858 UY -56 -33
 862 VE -66 8
 250 GF -53.2 4`);
-const states=entries(`01 AL -86.8 32.8
-04 AZ -111.8 34
-05 AR -92.4 34.8
-06 CA -120 37
-08 CO -105.5 39
-09 CT -72.7 41.6
-10 DE -75.4 39
-12 FL -82 28
-13 GA -83.5 32.6
-16 ID -114.5 44.3
-17 IL -89 40
-18 IN -86.1 40
-19 IA -93.5 42
-20 KS -98 38.5
-21 KY -85.3 37.5
-22 LA -92 31
+const northeast=entries(`09 CT -72.7 41.6
 23 ME -69 45.3
-24 MD -76.8 39.4
 25 MA -71.8 42.3
-26 MI -85 44
-27 MN -94.5 46
-28 MS -89.5 32.8
-29 MO -92.5 38.5
-30 MT -110 47
-31 NE -99.5 41.5
-32 NV -117 39
 33 NH -71.4 43.8
 34 NJ -74.5 40.2
-35 NM -106 34.5
 36 NY -75.5 43
-37 NC -79.5 35.5
-38 ND -100.5 47.5
-39 OH -82.8 40.3
-40 OK -97.5 35.5
-41 OR -120.5 44
 42 PA -77.7 40.9
 44 RI -71.4 41.5
-45 SC -80.8 33.8
-46 SD -100 44.5
-47 TN -86 35.8
-48 TX -99 31
-49 UT -111.5 39.3
-50 VT -72.7 44.3
-51 VA -79 37.5
-53 WA -120.5 47.4
-54 WV -80.7 38.7
-55 WI -89.8 44.5
-56 WY -107.5 43`);
+50 VT -72.7 44.3`);
 const regions=entries(`11 IDF 2.4 48.7
 24 CVL 1.7 47.5
 27 BFC 4.9 47.2
@@ -165,9 +80,9 @@ export const MAPS={
     rivers:[[[11.2,18.9],[10.8,17.5],[10.7,16],[11.1,14.5],[11.4,13],[11.2,11.6],[12.3,10],[12.6,9],[13.1,7.7],[12.7,6.3],[12.5,5.3]]],
   }),
   europe:config('europe',['Western Europe','Europe de l’Ouest'],europe,[-12,35,18,59.5],48,{scope:['13 countries in Western Europe. Only borders between the highlighted countries count.','13 pays d’Europe de l’Ouest. Seules les frontières entre les pays en vert comptent.']}),
-  africa:config('africa',['Africa','Afrique'],africa,[-26,-36,61,38],0,{scoreTolerance:60,recognitionTolerance:180,units:['countries & territories','pays et territoires'],remap:{Somaliland:'706'},scope:['54 countries and Western Sahara (EH). Disputed boundaries follow the dataset; Somaliland is grouped with Somalia.','54 pays et le Sahara occidental (EH). Les limites contestées suivent les données ; le Somaliland est regroupé avec la Somalie.']}),
+  africa:config('africa',['Maghreb & neighbours','Maghreb et voisins'],maghreb,[-18,9.5,37,38],25,{scoreTolerance:40,recognitionTolerance:120,units:['countries & territories','pays et territoires'],scope:['Morocco, Algeria, Tunisia, Libya, Mauritania, Mali, Niger, Egypt and Western Sahara (EH). Only shared borders between highlighted areas count. Disputed boundaries follow the dataset.','Maroc, Algérie, Tunisie, Libye, Mauritanie, Mali, Niger, Égypte et Sahara occidental (EH). Seules les frontières communes aux zones en vert comptent. Les limites contestées suivent les données.']}),
   'south-america':config('south-america',['South America','Amérique du Sud'],southAmerica,[-83,-57,-33,14],-20,{scoreTolerance:50,recognitionTolerance:150,units:['countries & territories','pays et territoires'],scope:['12 countries and French Guiana (GF). Only shared borders within this map count.','12 pays et la Guyane française (GF). Seules les frontières communes à cette carte comptent.']}),
-  usa:config('usa',['USA · states','USA · États'],states,[-126,24,-66,50],38,{file:'us-states.json',object:'states',scope:['48 contiguous states. Alaska, Hawaii, Washington, DC and overseas territories are excluded. Point-only contacts do not count.','48 États contigus. L’Alaska, Hawaï, Washington, DC et les territoires d’outre-mer sont exclus. Les contacts en un seul point ne comptent pas.'],units:['states','États']}),
+  usa:config('usa',['Northeastern USA','Nord-Est des États-Unis'],northeast,[-81,38.5,-66,48],43,{file:'us-states.json',object:'states',scoreTolerance:12,recognitionTolerance:36,scope:['9 states: the six New England states, plus New York, New Jersey and Pennsylvania. Only borders between these states count.','9 États : les six États de Nouvelle-Angleterre, ainsi que New York, le New Jersey et la Pennsylvanie. Seules leurs frontières communes comptent.'],units:['states','États']}),
   france:config('france',['France · regions','France · régions'],regions,[-5.5,41,10,51.5],46.5,{file:'france-regions.json',object:'regions',scoreTolerance:10,recognitionTolerance:30,units:['regions','régions'],scope:['13 metropolitan regions, including Corsica. Overseas regions are excluded. Only shared regional boundaries count.','13 régions métropolitaines, Corse comprise. Les régions d’outre-mer sont exclues. Seules les limites communes entre régions comptent.']}),
 };
 export function projection(latitude){const cos=Math.cos(latitude*Math.PI/180);return ([lon,lat])=>[lon*111.32*cos,-lat*111.32];}

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {MAPS,projection} from './maps.js';
 import {decodeTopology,scoreDrawing,borderProgress} from './geometry.js';
-const counts={'middle-earth':17,europe:19,africa:107,'south-america':25,usa:105,france:23};
+const counts={'middle-earth':17,europe:19,africa:14,'south-america':25,usa:13,france:23};
 const decoded={};
 for(const config of Object.values(MAPS)){
   const map=decodeTopology(JSON.parse(readFileSync('data/'+config.file)),{...config,project:projection(config.latitude)});decoded[config.id]=map;
@@ -25,19 +25,23 @@ test('French regions use current merged regions with expected shared boundaries'
   assert.ok(keys.has('084-093')); // Auvergne-Rhône-Alpes / PACA
   assert.ok(![...keys].some(key=>key.includes('094'))); // Corsica
 });
-test('US state targets exclude DC and point-only Four Corners contacts',()=>{
+test('Northeast includes exactly New England, New York, New Jersey and Pennsylvania',()=>{
+  assert.deepEqual([...MAPS.usa.selected].sort(),['009','023','025','033','034','036','042','044','050']);
   const keys=new Set(decoded.usa.borders.map(b=>b.key));
-  assert.ok(keys.has('006-032')); // California / Nevada
-  assert.ok(!keys.has('004-008')); // Arizona / Colorado
-  assert.ok(!keys.has('035-049')); // New Mexico / Utah
-  assert.ok(![...keys].some(key=>key.includes('011')));
+  assert.ok(keys.has('036-042'));
+  assert.ok(keys.has('009-025'));
+  assert.ok(!keys.has('006-032'));
 });
-test('South America includes French Guiana; Africa merges Somaliland into Somalia',()=>{
+test('Maghreb selection excludes distant African borders and includes neighbouring countries',()=>{
+  assert.deepEqual([...MAPS.africa.selected].sort(),['012','434','466','478','504','562','732','788','818']);
+  const keys=new Set(decoded.africa.borders.map(b=>b.key));
+  assert.ok(keys.has('012-504'));
+  assert.ok(keys.has('434-818'));
+  assert.ok(!keys.has('710-716'));
+});
+test('South America includes French Guiana',()=>{
   assert.ok(decoded['south-america'].borders.some(b=>b.key==='076-250'));
-  assert.ok(decoded.africa.countries.some(c=>c.name==='Somaliland'&&c.id==='706'));
-  assert.ok(!decoded.africa.borders.some(b=>b.key==='706-706'));
 });
-
 test('Middle-earth counts the Shire once as an enclave within Eriador',()=>{
   const map=decoded['middle-earth'];
   assert.deepEqual(map.borders.filter(b=>b.ids.includes('003')).map(b=>b.key),['002-003']);
