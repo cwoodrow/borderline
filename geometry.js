@@ -6,27 +6,63 @@ export const BORDER_TOLERANCE = 25;
 // Recognition is forgiving; the score retains its stricter 25 km tolerance.
 export const BORDER_RECOGNITION_TOLERANCE = 75;
 export const BORDER_COMPLETION_THRESHOLD = 0.6;
-export function decodeTopology(topology) {
-  const {scale, translate} = topology.transform;
+// Join shared pieces so dashed reveals stay continuous across source arc boundaries.
+function joinBorders(borders){
+  const groups=new Map();
+  for(const border of borders){if(!groups.has(border.key))groups.set(border.key,[]);groups.get(border.key).push(border);}
+  const result=[];
+  for(const group of groups.values()){
+    const endpoints=new Map(),used=new Set();
+    const key=p=>p.join(',');
+    group.forEach((border,i)=>{for(const point of [border.points[0],border.points.at(-1)]){const k=key(point);if(!endpoints.has(k))endpoints.set(k,[]);endpoints.get(k).push(i);}});
+    group.forEach((border,i)=>{
+      if(used.has(i))return;
+      used.add(i);let points=[...border.points];
+      for(const end of [false,true]){
+        while(true){
+          const point=end?points.at(-1):points[0];
+          const next=(endpoints.get(key(point))||[]).find(j=>!used.has(j));
+          if(next===undefined)break;
+          used.add(next);let line=group[next].points;
+          if(key(end?line[0]:line.at(-1))!==key(point))line=[...line].reverse();
+          points=end?[...points,...line.slice(1)]:[...line.slice(0,-1),...points];
+        }
+      }
+      result.push({...border,points});
+    });
+  }
+  return result;
+}
+export function decodeTopology(topology, options={}) {
+  const {selected=SELECTED,bounds=BOUNDS,project:projectPoint=project,object='countries',remap={}}=options;
+  const {scale,translate}=topology.transform||{};
   const arcs = topology.arcs.map(arc => {
+    if(!scale)return arc.map(projectPoint);
     let x=0,y=0;
-    return arc.map(p => {x+=p[0];y+=p[1];return project([x*scale[0]+translate[0],y*scale[1]+translate[1]]);});
+    return arc.map(p => {x+=p[0];y+=p[1];return projectPoint([x*scale[0]+translate[0],y*scale[1]+translate[1]]);});
   });
   const owners = arcs.map(()=>[]);
-  const countries = topology.objects.countries.geometries.map(g => {
+  const countries = topology.objects[object].geometries.map(g => {
     const polygons = g.type === 'Polygon' ? [g.arcs] : g.arcs;
-    const id=String(g.id).padStart(3,'0');
+    const id=remap[g.properties.name]||String(g.id??g.properties.name).padStart(3,'0');
     const used=new Set(polygons.flat(2).map(a=>a<0?~a:a));
-    used.forEach(a=>owners[a].push(id));
+    used.forEach(a=>{if(!owners[a].includes(id))owners[a].push(id);});
     return {id,name:g.properties.name,polygons:polygons.map(p=>p.map(ring=>ring.flatMap((a,i)=>{
       const points=a<0?[...arcs[~a]].reverse():arcs[a];
       return i?points.slice(1):points;
     })))};
   });
-  const topLeft=project([BOUNDS[0],BOUNDS[3]]), bottomRight=project([BOUNDS[2],BOUNDS[1]]);
+  const topLeft=projectPoint([bounds[0],bounds[3]]), bottomRight=projectPoint([bounds[2],bounds[1]]);
   const visible=p=>p[0]>=topLeft[0]&&p[0]<=bottomRight[0]&&p[1]>=topLeft[1]&&p[1]<=bottomRight[1];
-  const borders=arcs.flatMap((points,i)=>owners[i].length===2&&owners[i].every(id=>SELECTED.has(id))&&points.some(visible)?[{points,ids:owners[i],key:[...owners[i]].sort().join('-')}]:[]);
-  return {countries,borders,coasts:arcs.filter((_,i)=>owners[i].length===1)};
+  const borders=arcs.flatMap((points,i)=>owners[i].length===2&&owners[i].every(id=>selected.has(id))&&points.some(visible)?[{points,ids:owners[i],key:[...owners[i]].sort().join('-')}]:[]);
+  const references=arcs.map(()=>0);
+  for(const g of topology.objects[object].geometries){const polygons=g.type==='Polygon'?[g.arcs]:g.arcs;for(const a of new Set(polygons.flat(2).map(a=>a<0?~a:a)))references[a]++;}
+  // Keep nearby geographic context; distant polygons crossing the date line can
+  // otherwise create spurious lines across a regional rectangular projection.
+  const contextA=projectPoint([bounds[0]-15,bounds[3]+10]),contextB=projectPoint([bounds[2]+15,bounds[1]-10]);
+  const nearby=p=>p[0]>=contextA[0]&&p[0]<=contextB[0]&&p[1]>=contextA[1]&&p[1]<=contextB[1];
+  for(const country of countries)country.polygons=country.polygons.filter(polygon=>polygon[0].some(nearby));
+  return {countries,borders:joinBorders(borders),coasts:arcs.filter((points,i)=>references[i]===1&&points.some(nearby))};
 }
 export function sampleLines(lines, step=4) {
   const samples=[];

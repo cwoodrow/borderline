@@ -1,13 +1,36 @@
 import {createLocale} from './i18n.js';
 import {zoomAt,toWorld} from './viewport.js';
-import {decodeTopology,SELECTED,project,BOUNDS,scoreDrawing,borderProgress} from './geometry.js';
+import {decodeTopology,scoreDrawing,borderProgress} from './geometry.js';
+import {MAPS,projection} from './maps.js';
 const $=id=>document.getElementById(id),canvas=$('map'),ctx=canvas.getContext('2d');
 let map,strokes=[],active=null,revealed=false,transform,width,height,toastTimer;
 let fitTransform,panMode=false,gesture=null;
 const pointers=new Map();
+let config=MAPS[new URLSearchParams(location.search).get('map')]||MAPS.europe;
+let project=projection(config.latitude);
+const mapCache=new Map(),rounds=new Map();
+let loadVersion=0;
+for(const item of Object.values(MAPS)){
+  const option=document.createElement('option');option.value=item.id;option.textContent=item.names[0];$('map-choice').append(option);
+}
+$('map-choice').value=config.id;
 let lastScore=null,loadFailed=false;
 const t=createLocale(()=>{update();updateView();translateState();render();});
 function translateState(){
+  const fr=document.documentElement.lang==='fr',locale=fr?1:0;
+  for(const option of $('map-choice').options)option.textContent=MAPS[option.value].names[locale];
+  $('unit-count').textContent=config.selected.size;
+  $('unit-label').textContent=config.units[locale];
+  $('scope-note').textContent=config.scope[locale];
+  $('scope-rules').textContent=config.scope[locale];
+  $('map-name').textContent=config.names[locale].toUpperCase();
+  $('map-scale').textContent=fr?'TRACEZ LES LIMITES':'DRAW THE BORDERS';
+  $('recognition-rule').textContent=fr
+    ?`Une frontière est reconnue si au moins 60 % de sa longueur se trouve à environ ${config.recognitionTolerance} km ou moins de votre tracé. Le compteur s’actualise après chaque trait. Un trait peut couvrir plusieurs frontières ; plusieurs traits peuvent en couvrir une.`
+    :`A border is recognised when at least 60% of its length is within about ${config.recognitionTolerance} km of your drawing. The counter updates after each stroke. One stroke can cover several borders; several strokes can cover one.`;
+  $('score-rule').textContent=fr
+    ?`La couverture mesure la part des vraies frontières à moins d’environ ${config.scoreTolerance} km de vos traits ; la précision mesure la part de votre tracé à cette distance d’une vraie frontière. Le score est leur moyenne harmonique. Les distances et les limites sont simplifiées. Les îles sans frontière commune n’exigent aucun trait.`
+    :`Coverage measures the share of real borders within about ${config.scoreTolerance} km of your lines; accuracy measures the share of your drawing that close to a real border. The score is their harmonic mean. Distances and boundaries are simplified. Islands without shared borders need no lines.`;
   $('action-hint').textContent=t(revealed?'resultHint':'hint');
   $('loading').textContent=t(loadFailed?'error':'loading');
   $('result-note').textContent=t('resultNote');
@@ -21,7 +44,7 @@ function resize(){
   const zoom=fitTransform?transform.scale/fitTransform.scale:1;
   const rect=canvas.getBoundingClientRect();width=rect.width;height=rect.height;
   const dpr=window.devicePixelRatio||1;canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);
-  const a=project([BOUNDS[0],BOUNDS[3]]),b=project([BOUNDS[2],BOUNDS[1]]);
+  const a=project([config.bounds[0],config.bounds[3]]),b=project([config.bounds[2],config.bounds[1]]);
   const scale=Math.min((width-30)/(b[0]-a[0]),(height-100)/(b[1]-a[1]));
   fitTransform={scale,x:(width-(b[0]-a[0])*scale)/2-a[0]*scale,y:(height-(b[1]-a[1])*scale)/2-a[1]*scale-10};
   transform=center&&zoom>1?{scale:scale*zoom,x:width/2-center[0]*scale*zoom,y:height/2-center[1]*scale*zoom}:{...fitTransform};
@@ -50,28 +73,12 @@ $('pan').onclick=()=>{panMode=!panMode;updateView();};
 function screen(p){return [p[0]*transform.scale+transform.x,p[1]*transform.scale+transform.y];}
 function path(line){line.forEach((p,i)=>{const [x,y]=screen(p);i?ctx.lineTo(x,y):ctx.moveTo(x,y);});}
 function drawLines(lines,color,lineWidth,dash=[]){ctx.beginPath();for(const line of lines)path(line);ctx.strokeStyle=color;ctx.lineWidth=lineWidth;ctx.lineJoin='round';ctx.lineCap='round';ctx.setLineDash(dash);ctx.stroke();ctx.setLineDash([]);}
-// Hand-placed anchors keep country codes on the mainland.
-const countryLabels = [
-  {name:'PT',at:[-8.1,39.6]},
-  {name:'ES',at:[-3.2,40.1]},
-  {name:'FR',at:[2.2,46.6]},
-  {name:'BE',at:[4.6,50.8]},
-  {name:'NL',at:[5.4,52.8]},
-  {name:'LU',at:[6.1,49.8]},
-  {name:'DE',at:[10.3,51.1]},
-  {name:'CH',at:[8.1,46.7]},
-  {name:'AT',at:[13.4,47.5]},
-  {name:'IT',at:[12.5,43.1]},
-  {name:'DK',at:[9.4,56.3]},
-  {name:'UK',at:[-2.7,54.1]},
-  {name:'IE',at:[-8,53.4]},
-];
 function drawCountryLabels(){
   const fontSize=Math.max(9,Math.min(12,width/70));
   ctx.save();
   ctx.font=`500 ${fontSize}px "DM Sans", sans-serif`;
   ctx.textAlign='center';ctx.textBaseline='middle';
-  for(const label of countryLabels){
+  for(const label of config.labels){
     const [x,y]=screen(project(label.at));
     const lines=label.name.split('\n');
     lines.forEach((line,i)=>{
@@ -84,22 +91,22 @@ function drawCountryLabels(){
   ctx.restore();
 }
 function render(){if(!transform)return;ctx.clearRect(0,0,width,height);ctx.fillStyle='#eaf0ed';ctx.fillRect(0,0,width,height);
-  const grid=[];for(let lon=-20;lon<=30;lon+=5)grid.push([project([lon,25]),project([lon,70])]);for(let lat=30;lat<=65;lat+=5)grid.push([project([-25,lat]),project([35,lat])]);drawLines(grid,'#dae4df',.65);
+  const grid=[];for(let lon=-180;lon<=180;lon+=5)grid.push([project([lon,-85]),project([lon,85])]);for(let lat=-85;lat<=85;lat+=5)grid.push([project([-180,lat]),project([180,lat])]);drawLines(grid,'#dae4df',.65);
   if(!map)return;
-  for(const selected of [false,true]){ctx.beginPath();for(const country of map.countries.filter(c=>SELECTED.has(c.id)===selected))for(const polygon of country.polygons)for(const ring of polygon){path(ring);ctx.closePath();}ctx.fillStyle=selected?'#dce5c8':'#e2e6dc';ctx.fill('evenodd');}
+  for(const selected of [false,true]){ctx.beginPath();for(const country of map.countries.filter(c=>config.selected.has(c.id)===selected))for(const polygon of country.polygons)for(const ring of polygon){path(ring);ctx.closePath();}ctx.fillStyle=selected?'#dce5c8':'#e2e6dc';ctx.fill('evenodd');}
   drawLines(map.coasts,'#b4c3a8',.8);
   ctx.save();ctx.font='9px "DM Sans", sans-serif';ctx.fillStyle='#98ada7';ctx.textAlign='center';
-  for(const [name,at] of [[t('seas')[0],[-10,46]],[t('seas')[1],[3,56]],[t('seas')[2],[7,37.5]]]){const [x,y]=screen(project(at));ctx.fillText(name,x,y);}
+  if(config.id==='europe')for(const [name,at] of [[t('seas')[0],[-10,46]],[t('seas')[1],[3,56]],[t('seas')[2],[7,37.5]]]){const [x,y]=screen(project(at));ctx.fillText(name,x,y);}
   ctx.restore();
   drawCountryLabels();
   drawLines(strokes,'#d5834c',2.8);if(active)drawLines([active],'#d5834c',2.8);
   if(revealed)drawLines(map.borders.map(b=>b.points),'#427c65',1.8,[5,4]);
 }
 function update(){
-  const disabled=!strokes.length||revealed;
+  const disabled=!map||!strokes.length||revealed;
   $('undo').disabled=disabled;$('clear').disabled=disabled;$('check').disabled=disabled;
   if(map){
-    const {remaining}=borderProgress(strokes,map.borders);
+    const {remaining}=borderProgress(strokes,map.borders,config.recognitionTolerance);
     $('border-count').textContent=remaining;
     $('border-count-label').textContent=revealed
       ? t(remaining===1?'missingOne':'missingMany')
@@ -146,8 +153,38 @@ function undo(){if(!revealed){strokes.pop();update();render();}}
 $('undo').onclick=undo;$('clear').onclick=()=>{strokes=[];update();render();};
 document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'){event.preventDefault();undo();}});
 $('help').onclick=()=>notify(t('help'));
-$('check').onclick=()=>{if(!strokes.length||revealed)return;revealed=true;const result=scoreDrawing(strokes,map.borders.map(b=>b.points));$('score').innerHTML=`${result.score}<span>/100</span>`;for(const metric of ['coverage','accuracy']){$(metric).textContent=`${Math.round(result[metric]*100)}%`;$(metric+'-bar').style.width=`${result[metric]*100}%`;}lastScore=result.score;$('play-info').hidden=true;$('results').hidden=false;$('check').hidden=true;$('retry').hidden=false;$('truth-legend').hidden=false;translateState();update();updateView();render();};
-$('retry').onclick=()=>{strokes=[];active=null;revealed=false;$('results').hidden=true;$('play-info').hidden=false;$('check').hidden=false;$('retry').hidden=true;$('truth-legend').hidden=true;lastScore=null;translateState();panMode=false;transform={...fitTransform};update();updateView();render();};
+$('check').onclick=()=>{if(!map||!strokes.length||revealed)return;revealed=true;const result=scoreDrawing(strokes,map.borders.map(b=>b.points),config.scoreTolerance);$('score').innerHTML=`${result.score}<span>/100</span>`;for(const metric of ['coverage','accuracy']){$(metric).textContent=`${Math.round(result[metric]*100)}%`;$(metric+'-bar').style.width=`${result[metric]*100}%`;}lastScore=result.score;$('play-info').hidden=true;$('results').hidden=false;$('check').hidden=true;$('retry').hidden=false;$('truth-legend').hidden=false;translateState();update();updateView();render();};
+function syncRound(){
+  $('results').hidden=!revealed;$('play-info').hidden=revealed;
+  $('check').hidden=revealed;$('retry').hidden=!revealed;$('truth-legend').hidden=!revealed;
+  if(revealed&&map){const result=scoreDrawing(strokes,map.borders.map(b=>b.points),config.scoreTolerance);lastScore=result.score;
+    $('score').innerHTML=`${result.score}<span>/100</span>`;
+    for(const metric of ['coverage','accuracy']){$(metric).textContent=`${Math.round(result[metric]*100)}%`;$(metric+'-bar').style.width=`${result[metric]*100}%`;}
+  }
+  translateState();update();updateView();render();
+}
+$('retry').onclick=()=>{strokes=[];active=null;revealed=false;lastScore=null;panMode=false;transform={...fitTransform};syncRound();};
+async function loadMap(id){
+  const version=++loadVersion;
+  if(map)rounds.set(config.id,{strokes,revealed,lastScore});
+  config=MAPS[id];project=projection(config.latitude);
+  const saved=rounds.get(id)||{strokes:[],revealed:false,lastScore:null};
+  ({strokes,revealed,lastScore}=saved);
+  active=null;gesture=null;pointers.clear();panMode=false;map=null;loadFailed=false;transform=null;fitTransform=null;
+  $('map-choice').value=id;$('loading').hidden=false;$('border-count').textContent='…';$('toast').hidden=true;
+  syncRound();resize();
+  const url=new URL(location.href);url.searchParams.set('map',id);history.replaceState(null,'',url);
+  try{
+    if(!mapCache.has(config.file)){
+      const file=config.file;
+      mapCache.set(file,fetch(`./data/${file}`).then(response=>{if(!response.ok)throw new Error(`HTTP ${response.status}`);return response.json();}).catch(error=>{mapCache.delete(file);throw error;}));
+    }
+    const topology=await mapCache.get(config.file);
+    if(version!==loadVersion)return;
+    map=decodeTopology(topology,{...config,project});$('loading').hidden=true;syncRound();
+  }catch(error){if(version!==loadVersion)return;loadFailed=true;translateState();console.error(error);}
+}
+$('map-choice').addEventListener('change',event=>loadMap(event.target.value));
 new ResizeObserver(resize).observe(canvas);
 document.fonts.ready.then(render);
-try{const response=await fetch('./data/countries-50m.json');if(!response.ok)throw new Error(`HTTP ${response.status}`);map=decodeTopology(await response.json());update();$('loading').hidden=true;resize();}catch(error){loadFailed=true;translateState();console.error(error);}
+await loadMap(config.id);
