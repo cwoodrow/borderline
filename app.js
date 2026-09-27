@@ -1,9 +1,20 @@
+import {createLocale} from './i18n.js';
 import {zoomAt,toWorld} from './viewport.js';
 import {decodeTopology,SELECTED,project,BOUNDS,scoreDrawing,borderProgress} from './geometry.js';
 const $=id=>document.getElementById(id),canvas=$('map'),ctx=canvas.getContext('2d');
 let map,strokes=[],active=null,revealed=false,transform,width,height,toastTimer;
 let fitTransform,panMode=false,gesture=null;
 const pointers=new Map();
+let lastScore=null,loadFailed=false;
+const t=createLocale(()=>{update();updateView();translateState();render();});
+function translateState(){
+  $('action-hint').textContent=t(revealed?'resultHint':'hint');
+  $('loading').textContent=t(loadFailed?'error':'loading');
+  $('result-note').textContent=t('resultNote');
+  if(lastScore!==null)$('verdict').textContent=t('verdicts')[lastScore>=85?3:lastScore>=60?2:lastScore>=30?1:0];
+  if(!$('toast').hidden)$('toast').textContent=t('help');
+}
+translateState();
 function notify(message){$('toast').textContent=message;$('toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').hidden=true,6000);}
 function resize(){
   const center=transform?toWorld(transform,[width/2,height/2]):null;
@@ -24,7 +35,7 @@ function updateView(){
   $('zoom-out').disabled=zoom<=1+1e-6;
   $('pan').setAttribute('aria-pressed',String(panMode));
   canvas.style.cursor=gesture?.type==='pan'?'grabbing':panMode||revealed?'grab':'crosshair';
-  $('mode-label').textContent=revealed?'BORDERS REVEALED':panMode?'PAN MODE':'FREEHAND MODE';
+  $('mode-label').textContent=t(revealed?'revealed':panMode?'pan':'draw');
 }
 function changeZoom(factor,point=[width/2,height/2]){
   if(!transform||active)return;
@@ -78,7 +89,7 @@ function render(){if(!transform)return;ctx.clearRect(0,0,width,height);ctx.fillS
   for(const selected of [false,true]){ctx.beginPath();for(const country of map.countries.filter(c=>SELECTED.has(c.id)===selected))for(const polygon of country.polygons)for(const ring of polygon){path(ring);ctx.closePath();}ctx.fillStyle=selected?'#dce5c8':'#e2e6dc';ctx.fill('evenodd');}
   drawLines(map.coasts,'#b4c3a8',.8);
   ctx.save();ctx.font='9px "DM Sans", sans-serif';ctx.fillStyle='#98ada7';ctx.textAlign='center';
-  for(const [name,at] of [['NORTH ATLANTIC OCEAN',[-10,46]],['NORTH SEA',[3,56]],['MEDITERRANEAN SEA',[7,37.5]]]){const [x,y]=screen(project(at));ctx.fillText(name,x,y);}
+  for(const [name,at] of [[t('seas')[0],[-10,46]],[t('seas')[1],[3,56]],[t('seas')[2],[7,37.5]]]){const [x,y]=screen(project(at));ctx.fillText(name,x,y);}
   ctx.restore();
   drawCountryLabels();
   drawLines(strokes,'#d5834c',2.8);if(active)drawLines([active],'#d5834c',2.8);
@@ -91,8 +102,8 @@ function update(){
     const {remaining}=borderProgress(strokes,map.borders);
     $('border-count').textContent=remaining;
     $('border-count-label').textContent=revealed
-      ? (remaining===1?'border not recognised':'borders not recognised')
-      : (remaining===1?'land border left':'land borders left');
+      ? t(remaining===1?'missingOne':'missingMany')
+      : t(remaining===1?'leftOne':'leftMany');
   }
 }
 function localPoint(event){const rect=canvas.getBoundingClientRect();return [event.clientX-rect.left,event.clientY-rect.top];}
@@ -134,9 +145,9 @@ canvas.addEventListener('wheel',event=>{
 function undo(){if(!revealed){strokes.pop();update();render();}}
 $('undo').onclick=undo;$('clear').onclick=()=>{strokes=[];update();render();};
 document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'){event.preventDefault();undo();}});
-$('help').onclick=()=>notify('Drag to draw borders. Scroll or use +/− to zoom. Switch to Pan to move the map, or drag with the middle mouse button. On touchscreens, pinch with two fingers to zoom and move. Fit restores the full map.');
-$('check').onclick=()=>{if(!strokes.length||revealed)return;revealed=true;const result=scoreDrawing(strokes,map.borders.map(b=>b.points));$('score').innerHTML=`${result.score}<span>/100</span>`;for(const metric of ['coverage','accuracy']){$(metric).textContent=`${Math.round(result[metric]*100)}%`;$(metric+'-bar').style.width=`${result[metric]*100}%`;}$('verdict').textContent=result.score>=85?'A cartographer at heart.':result.score>=60?'You know your way around.':result.score>=30?'A promising sense of direction.':'A new perspective on Europe.';$('result-note').textContent='The dashed green lines reveal the real borders. Missing borders reduce coverage; stray lines reduce accuracy.';$('play-info').hidden=true;$('results').hidden=false;$('check').hidden=true;$('retry').hidden=false;$('truth-legend').hidden=false;$('mode-label').textContent='BORDERS REVEALED';$('action-hint').textContent='Every attempt makes the map a little more familiar.';update();updateView();render();};
-$('retry').onclick=()=>{strokes=[];active=null;revealed=false;$('results').hidden=true;$('play-info').hidden=false;$('check').hidden=false;$('retry').hidden=true;$('truth-legend').hidden=true;$('mode-label').textContent='FREEHAND MODE';$('action-hint').textContent='No timer. Just your mental map.';panMode=false;transform={...fitTransform};update();updateView();render();};
+$('help').onclick=()=>notify(t('help'));
+$('check').onclick=()=>{if(!strokes.length||revealed)return;revealed=true;const result=scoreDrawing(strokes,map.borders.map(b=>b.points));$('score').innerHTML=`${result.score}<span>/100</span>`;for(const metric of ['coverage','accuracy']){$(metric).textContent=`${Math.round(result[metric]*100)}%`;$(metric+'-bar').style.width=`${result[metric]*100}%`;}lastScore=result.score;$('play-info').hidden=true;$('results').hidden=false;$('check').hidden=true;$('retry').hidden=false;$('truth-legend').hidden=false;translateState();update();updateView();render();};
+$('retry').onclick=()=>{strokes=[];active=null;revealed=false;$('results').hidden=true;$('play-info').hidden=false;$('check').hidden=false;$('retry').hidden=true;$('truth-legend').hidden=true;lastScore=null;translateState();panMode=false;transform={...fitTransform};update();updateView();render();};
 new ResizeObserver(resize).observe(canvas);
 document.fonts.ready.then(render);
-try{const response=await fetch('./data/countries-50m.json');if(!response.ok)throw new Error(`HTTP ${response.status}`);map=decodeTopology(await response.json());update();$('loading').hidden=true;resize();}catch(error){$('loading').textContent='The map could not load. Refresh to try again.';console.error(error);}
+try{const response=await fetch('./data/countries-50m.json');if(!response.ok)throw new Error(`HTTP ${response.status}`);map=decodeTopology(await response.json());update();$('loading').hidden=true;resize();}catch(error){loadFailed=true;translateState();console.error(error);}
