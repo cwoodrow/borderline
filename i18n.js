@@ -64,11 +64,16 @@ export function resolveLanguage(search, stored, browser='en'){
   const requested=new URLSearchParams(search).get('lang');
   if(requested==='en'||requested==='fr')return requested;
   if(stored==='en'||stored==='fr')return stored;
-  return browser.toLowerCase().startsWith('fr')?'fr':'en';
+  const preferences=Array.isArray(browser)?browser:[browser];
+  for(const preference of preferences){
+    const code=String(preference).toLowerCase().split('-')[0];
+    if(code==='fr'||code==='en')return code;
+  }
+  return 'en';
 }
 export function createLocale(onChange){
   let stored;try{stored=localStorage.getItem('borderline-language');}catch{}
-  let language=resolveLanguage(location.search,stored,navigator.language);
+  let language=resolveLanguage(location.search,stored,navigator.languages?.length?navigator.languages:navigator.language);
   const entries=french.map(([selector,value,attribute])=>{
     const node=document.querySelector(selector);
     if(!node)throw new Error(`Missing translation target: ${selector}`);

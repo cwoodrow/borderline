@@ -13,3 +13,13 @@ test('shareable language overrides saved preference and browser language',()=>{
   assert.equal(resolveLanguage('',null,'fr-FR'),'fr');
   assert.equal(resolveLanguage('?lang=unknown',null,'de'),'en');
 });
+
+test('browser preferences select the first supported language, including regional variants',()=>{
+  assert.equal(resolveLanguage('',null,['de-DE','fr-CA','en-US']),'fr');
+  assert.equal(resolveLanguage('',null,['en-GB','fr-FR']),'en');
+  assert.equal(resolveLanguage('',null,['FR-be','en']),'fr');
+  assert.equal(resolveLanguage('',null,['de','es']),'en');
+  assert.equal(resolveLanguage('',null,[]),'en');
+  assert.equal(resolveLanguage('','en',['fr-FR']),'en');
+  assert.equal(resolveLanguage('?lang=fr','en',['en-US']),'fr');
+});

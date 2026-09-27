@@ -4,7 +4,7 @@ A web geography game: draw Western Europe's missing country borders from memory,
 
 ## Languages
 
-Use the header menu to switch between English and French without losing your drawing. The choice is saved in this browser. Share `?lang=fr` or `?lang=en` to open a specific language; otherwise, the saved choice or browser language is used.
+Use the header menu to switch between English and French without losing your drawing. The choice is saved in this browser. Share `?lang=fr` or `?lang=en` to open a specific language; otherwise, the saved choice or the first supported language in the browser’s ordered language preferences is used. Regional variants such as `fr-CA` and `en-GB` are supported; English is the fallback when no preferred language is supported.
 
 [Play in French](https://cwoodrow.github.io/borderline/?lang=fr) · [Play in English](https://cwoodrow.github.io/borderline/?lang=en)
 
