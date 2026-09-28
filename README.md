@@ -6,7 +6,7 @@ A web geography game: draw missing borders from memory, then compare them with r
 
 ## Maps
 
-Choose a map from the selector. Each map keeps its current attempt while you switch, until the page is refreshed. Share `?map=africa&lang=fr` (or another map ID) to open a specific map and language.
+Choose a map from the top menu. Each map shows your personal best as a percentage (or a dash before your first submitted attempt). Each map keeps its current attempt while you switch, until the page is refreshed. Share `?map=africa&lang=fr` (or another map ID) to open a specific map and language.
 
 | Map ID | Scope | Shared borders | Scoring tolerance | Recognition tolerance |
 | --- | --- | ---: | ---: | ---: |
@@ -39,6 +39,10 @@ Open http://localhost:8000. Python 3 is required for the development server. No 
 Drag using a mouse, pen, or touch. Release to finish a stroke. Undo removes the last stroke (also Ctrl/Cmd+Z); Clear removes all strokes. Check your borders reveals the actual borders and scores your attempt. Try again starts a blank attempt for the current map.
 
 Zoom from 100% to 800% with +/− or the mouse wheel. Wheel zoom follows the cursor. Toggle Pan to move, or use the middle mouse button. On touchscreens, pinch and pan with two fingers. Fit restores the full map. Drawings stay anchored to geographic coordinates at every zoom level.
+
+## Personal bests
+
+Submitted scores are stored per map in this browser using localStorage. Only improvements replace a record; a real 0% score is distinct from an unplayed map. Records survive reloads and retries but do not sync between browsers or devices. If storage is unavailable, records last for the current session. Map scope or scoring-tolerance changes use separate record keys. Earlier attempts made before this feature cannot be recovered.
 
 ## Scoring
 

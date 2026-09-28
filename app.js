@@ -1,3 +1,4 @@
+import {createScores} from './scores.js';
 import {createLocale} from './i18n.js';
 import {zoomAt,toWorld} from './viewport.js';
 import {decodeTopology,scoreDrawing,borderProgress} from './geometry.js';
@@ -10,15 +11,34 @@ let config=MAPS[new URLSearchParams(location.search).get('map')]||MAPS.europe;
 let project=projection(config.latitude);
 const mapCache=new Map(),rounds=new Map();
 let loadVersion=0;
+let scoreStorage;try{scoreStorage=window.localStorage;}catch{}
+const highScores=createScores(scoreStorage);
+const menuItems=new Map();
 for(const item of [...Object.values(MAPS).filter(m=>!m.fantasy),...Object.values(MAPS).filter(m=>m.fantasy)]){
-  const option=document.createElement('option');option.value=item.id;option.textContent=item.names[0];$('map-choice').append(option);
+  const button=document.createElement('button');button.type='button';button.className='map-menu-item';button.dataset.map=item.id;
+  const name=document.createElement('span');name.className='map-menu-name';
+  const best=document.createElement('span');best.className='map-menu-best';
+  button.append(name,best);button.addEventListener('click',()=>{if(config.id!==item.id||loadFailed)loadMap(item.id);});
+  $('map-menu').append(button);menuItems.set(item.id,{button,name,best});
 }
-$('map-choice').value=config.id;
+function updateMapMenu(){
+  const fr=document.documentElement.lang==='fr';
+  for(const [id,{button,name,best}] of menuItems){
+    const item=MAPS[id],score=highScores.get(item);
+    name.textContent=item.names[fr?1:0];
+    best.textContent=`${fr?'Record':'Best'} ${score===null?'—':score+'%'}`;
+    button.setAttribute('aria-label',`${name.textContent}, ${score===null?(fr?'pas encore de score':'no score yet'):(fr?'record':'best score')+' '+score+'%'}`);
+    if(config.id===id)button.setAttribute('aria-current','true');else button.removeAttribute('aria-current');
+  }
+  $('scores-note').textContent=highScores.persistent?(fr?'Records personnels · ce navigateur':'Personal bests · this browser'):(fr?'Records personnels · cette session':'Personal bests · this session');
+}
+window.addEventListener('storage',updateMapMenu);
 let lastScore=null,loadFailed=false;
 const t=createLocale(()=>{update();updateView();translateState();render();});
 function translateState(){
   const fr=document.documentElement.lang==='fr',locale=fr?1:0;
-  for(const option of $('map-choice').options)option.textContent=MAPS[option.value].names[locale];
+  updateMapMenu();
+  $('region-title').textContent=config.names[locale];
   $('unit-count').textContent=config.selected.size;
   $('unit-label').textContent=config.units[locale];
   $('scope-note').textContent=config.scope[locale];
@@ -167,12 +187,12 @@ function undo(){if(!revealed){strokes.pop();update();render();}}
 $('undo').onclick=undo;$('clear').onclick=()=>{strokes=[];update();render();};
 document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'){event.preventDefault();undo();}});
 $('help').onclick=()=>notify(t('help'));
-$('check').onclick=()=>{if(!map||!strokes.length||revealed)return;revealed=true;const result=scoreDrawing(strokes,map.borders.map(b=>b.points),config.scoreTolerance);$('score').innerHTML=`${result.score}<span>/100</span>`;for(const metric of ['coverage','accuracy']){$(metric).textContent=`${Math.round(result[metric]*100)}%`;$(metric+'-bar').style.width=`${result[metric]*100}%`;}lastScore=result.score;$('play-info').hidden=true;$('results').hidden=false;$('check').hidden=true;$('retry').hidden=false;$('truth-legend').hidden=false;translateState();update();updateView();render();};
+$('check').onclick=()=>{if(!map||!strokes.length||revealed)return;revealed=true;const result=scoreDrawing(strokes,map.borders.map(b=>b.points),config.scoreTolerance);$('score').innerHTML=`${result.score}<span>%</span>`;for(const metric of ['coverage','accuracy']){$(metric).textContent=`${Math.round(result[metric]*100)}%`;$(metric+'-bar').style.width=`${result[metric]*100}%`;}lastScore=result.score;highScores.record(config,result.score);$('play-info').hidden=true;$('results').hidden=false;$('check').hidden=true;$('retry').hidden=false;$('truth-legend').hidden=false;translateState();update();updateView();render();};
 function syncRound(){
   $('results').hidden=!revealed;$('play-info').hidden=revealed;
   $('check').hidden=revealed;$('retry').hidden=!revealed;$('truth-legend').hidden=!revealed;
   if(revealed&&map){const result=scoreDrawing(strokes,map.borders.map(b=>b.points),config.scoreTolerance);lastScore=result.score;
-    $('score').innerHTML=`${result.score}<span>/100</span>`;
+    $('score').innerHTML=`${result.score}<span>%</span>`;
     for(const metric of ['coverage','accuracy']){$(metric).textContent=`${Math.round(result[metric]*100)}%`;$(metric+'-bar').style.width=`${result[metric]*100}%`;}
   }
   translateState();update();updateView();render();
@@ -185,7 +205,7 @@ async function loadMap(id){
   const saved=rounds.get(id)||{strokes:[],revealed:false,lastScore:null};
   ({strokes,revealed,lastScore}=saved);
   active=null;gesture=null;pointers.clear();panMode=false;map=null;loadFailed=false;transform=null;fitTransform=null;
-  $('map-choice').value=id;$('loading').hidden=false;$('border-count').textContent='…';$('toast').hidden=true;
+  $('loading').hidden=false;$('border-count').textContent='…';$('toast').hidden=true;
   syncRound();resize();
   const url=new URL(location.href);url.searchParams.set('map',id);history.replaceState(null,'',url);
   try{
@@ -198,7 +218,6 @@ async function loadMap(id){
     map=decodeTopology(topology,{...config,project});$('loading').hidden=true;syncRound();
   }catch(error){if(version!==loadVersion)return;loadFailed=true;translateState();console.error(error);}
 }
-$('map-choice').addEventListener('change',event=>loadMap(event.target.value));
 new ResizeObserver(resize).observe(canvas);
 document.fonts.ready.then(render);
 await loadMap(config.id);

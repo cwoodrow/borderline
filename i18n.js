@@ -29,7 +29,7 @@ const french = [
   ['h1','Vous avez le sens de l’orientation ?<br>À vous de jouer.'],
   ['.intro','La carte est là. Ses frontières ont disparu.<br>Redessinez-les, un trait à la fois.'],
   ['.region .small-label','VOTRE TERRAIN DE JEU'],
-  ['.map-choice-label','Choisir une carte'],
+  ['#map-menu-title','Choisissez votre carte'],
   ['#play-info h3','À vous de tracer'],
   ['#play-info li:nth-child(1) p','<strong>Trouvez vos repères.</strong><br>Aidez-vous des côtes pour vous orienter.'],
   ['#play-info li:nth-child(2) p','<strong>Tracez les frontières manquantes.</strong><br>Relâchez pour actualiser le compteur.'],
