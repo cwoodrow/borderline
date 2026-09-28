@@ -56,29 +56,10 @@ const regions=entries(`11 IDF 2.4 48.7
 84 ARA 4.8 45.5
 93 PACA 6.2 44
 94 COR 9 42.2`);
-const middleEarth=[
-  {id:'001',name:'Lindon',at:[3.3,17.1]},
-  {id:'002',name:'Eriador',at:[7,18]},
-  {id:'003',name:'Shire',nameFr:'Comté',at:[6.8,14.8]},
-  {id:'004',name:'Rhovanion',at:[11.5,16.5]},
-  {id:'005',name:'Rhûn',at:[16.5,16]},
-  {id:'006',name:'Enedwaith',at:[6.3,11]},
-  {id:'007',name:'Rohan',at:[12,8.7]},
-  {id:'008',name:'Gondor',at:[9.1,7.1]},
-  {id:'009',name:'Mordor',at:[16.2,8.1]},
-  {id:'010',name:'Khand',at:[18.2,4.5]},
-  {id:'011',name:'Harad',at:[15,2.8]},
-];
 function config(id,names,labels,bounds,latitude,options={}){
   return {id,names,labels,bounds,latitude,selected:new Set(labels.map(l=>l.id)),file:'countries-50m.json',object:'countries',scoreTolerance:25,recognitionTolerance:75,units:['countries','pays'],...options};
 }
 export const MAPS={
-  'middle-earth':config('middle-earth',['Middle-earth · Tolkien','Terre du Milieu · Tolkien'],middleEarth,[0,0,20,22],0,{
-    file:'middle-earth.json',object:'regions',fantasy:true,scoreTolerance:45,recognitionTolerance:135,units:['realms & regions','royaumes et régions'],
-    scope:['An original schematic fan map inspired by Tolkien. 11 realms and regions; invented game boundaries, not canonical borders or a historical snapshot.','Carte schématique originale inspirée de Tolkien. 11 royaumes et régions ; limites inventées pour le jeu, sans frontières canoniques ni époque précise.'],
-    mountains:[[4.8,17.3],[4.9,16.7],[9,17.5],[9.15,16.8],[9.35,16],[9.5,15.2],[9.45,14.4],[9.3,13.6],[9.15,12.8],[9.1,12.1],[11,19.4],[12,19.1],[13,18.9],[9.5,7.4],[10.2,7.7],[10.9,7.8],[11.6,7.7],[14.9,9.6],[15.5,10],[16.3,10.2],[17.1,10.3],[14.7,8.7],[14.5,8]],
-    rivers:[[[11.2,18.9],[10.8,17.5],[10.7,16],[11.1,14.5],[11.4,13],[11.2,11.6],[12.3,10],[12.6,9],[13.1,7.7],[12.7,6.3],[12.5,5.3]]],
-  }),
   europe:config('europe',['Western Europe','Europe de l’Ouest'],europe,[-12,35,18,59.5],48,{scope:['13 countries in Western Europe. Only borders between the highlighted countries count.','13 pays d’Europe de l’Ouest. Seules les frontières entre les pays en vert comptent.']}),
   africa:config('africa',['Maghreb & neighbours','Maghreb et voisins'],maghreb,[-18,9.5,37,38],25,{scoreTolerance:40,recognitionTolerance:120,units:['countries & territories','pays et territoires'],scope:['Morocco, Algeria, Tunisia, Libya, Mauritania, Mali, Niger, Egypt and Western Sahara (EH). Only shared borders between highlighted areas count. Disputed boundaries follow the dataset.','Maroc, Algérie, Tunisie, Libye, Mauritanie, Mali, Niger, Égypte et Sahara occidental (EH). Seules les frontières communes aux zones en vert comptent. Les limites contestées suivent les données.']}),
   'south-america':config('south-america',['South America','Amérique du Sud'],southAmerica,[-83,-57,-33,14],-20,{scoreTolerance:50,recognitionTolerance:150,units:['countries & territories','pays et territoires'],scope:['12 countries and French Guiana (GF). Only shared borders within this map count.','12 pays et la Guyane française (GF). Seules les frontières communes à cette carte comptent.']}),

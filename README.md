@@ -18,10 +18,6 @@ Choose a map from the top menu. Each map shows your personal best as a percentag
 
 Country/state codes and regional abbreviations provide hints. Only shared boundaries between selected areas count; point-only contacts and coastlines do not. Islands without shared borders need no drawing. The US map includes New England, New York, New Jersey and Pennsylvania. The Maghreb map includes Morocco, Algeria, Tunisia, Libya, Mauritania, Mali, Niger, Egypt and Western Sahara. Other US states and African countries, and overseas French regions, are outside these scopes. The `usa` and `africa` link IDs are retained for existing links.
 
-## Middle-earth
-
-[Play the Middle-earth fan map](https://cwoodrow.github.io/borderline/?map=middle-earth). It has 11 realms and regions and 17 shared game boundaries. This original schematic uses invented boundaries, arbitrary map units, and terrain hints; it is not a canonical political map. English and French are supported.
-
 ## Languages
 
 Use the header menu to switch between English and French without losing your drawing. The choice is saved in this browser. URL language takes priority over the saved choice, then the browser’s ordered language preferences. Regional variants such as `fr-CA` and `en-GB` are supported; English is the fallback.

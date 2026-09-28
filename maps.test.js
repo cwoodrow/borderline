@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {MAPS,projection} from './maps.js';
 import {decodeTopology,scoreDrawing,borderProgress} from './geometry.js';
-const counts={'middle-earth':17,europe:19,africa:14,'south-america':25,usa:13,france:23};
+const counts={europe:19,africa:14,'south-america':25,usa:13,france:23};
 const decoded={};
 for(const config of Object.values(MAPS)){
   const map=decodeTopology(JSON.parse(readFileSync('data/'+config.file)),{...config,project:projection(config.latitude)});decoded[config.id]=map;
@@ -41,10 +41,4 @@ test('Maghreb selection excludes distant African borders and includes neighbouri
 });
 test('South America includes French Guiana',()=>{
   assert.ok(decoded['south-america'].borders.some(b=>b.key==='076-250'));
-});
-test('Middle-earth counts the Shire once as an enclave within Eriador',()=>{
-  const map=decoded['middle-earth'];
-  assert.deepEqual(map.borders.filter(b=>b.ids.includes('003')).map(b=>b.key),['002-003']);
-  assert.ok(map.borders.some(b=>b.key==='007-008')); // Rohan / Gondor
-  assert.ok(map.borders.some(b=>b.key==='008-009')); // Gondor / Mordor
 });
