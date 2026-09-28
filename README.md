@@ -40,6 +40,10 @@ Zoom from 100% to 800% with +/− or the mouse wheel. Wheel zoom follows the cur
 
 Submitted scores are stored per map in this browser using localStorage. Only improvements replace a record; a real 0% score is distinct from an unplayed map. Records survive reloads and retries but do not sync between browsers or devices. If storage is unavailable, records last for the current session. Map scope or scoring-tolerance changes use separate record keys. Earlier attempts made before this feature cannot be recovered.
 
+## World podium (Supabase)
+
+The global top 3 per map is implemented with anonymous submissions, server-side score verification, and a nickname prompt for qualifying attempts. Supabase backend deployment is required before enabling it on the live site; see [setup and operating notes](supabase/README.md). Local personal bests continue working if the service is unavailable.
+
 ## Scoring
 
 - Coverage: the length-weighted fraction of real borders within the map’s scoring tolerance of your drawing.

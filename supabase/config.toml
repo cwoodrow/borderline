@@ -1,0 +1,4 @@
+project_id = "borderline"
+
+[functions.leaderboard]
+verify_jwt = false

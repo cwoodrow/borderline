@@ -1,3 +1,4 @@
+import {createLeaderboard} from './leaderboard.js';
 import {createScores} from './scores.js';
 import {createLocale} from './i18n.js';
 import {zoomAt,toWorld} from './viewport.js';
@@ -37,7 +38,9 @@ function updateMapMenu(){
 }
 window.addEventListener('storage',updateMapMenu);
 let lastScore=null,loadFailed=false;
-const t=createLocale(()=>{update();updateView();translateState();render();});
+let leaderboard;
+const t=createLocale(()=>{update();updateView();translateState();render();leaderboard?.translate();});
+leaderboard=createLeaderboard();
 function translateState(){
   const fr=document.documentElement.lang==='fr',locale=fr?1:0;
   updateMapMenu();
@@ -176,7 +179,7 @@ function undo(){if(!revealed){strokes.pop();update();render();}}
 $('undo').onclick=undo;$('clear').onclick=()=>{strokes=[];update();render();};
 document.addEventListener('keydown',event=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==='z'){event.preventDefault();undo();}});
 $('help').onclick=()=>notify(t('help'));
-$('check').onclick=()=>{if(!map||!strokes.length||revealed)return;revealed=true;const result=scoreDrawing(strokes,map.borders.map(b=>b.points),config.scoreTolerance);$('score').innerHTML=`${result.score}<span>%</span>`;for(const metric of ['coverage','accuracy']){$(metric).textContent=`${Math.round(result[metric]*100)}%`;$(metric+'-bar').style.width=`${result[metric]*100}%`;}lastScore=result.score;highScores.record(config,result.score);$('play-info').hidden=true;$('results').hidden=false;$('check').hidden=true;$('retry').hidden=false;$('truth-legend').hidden=false;translateState();update();updateView();render();};
+$('check').onclick=()=>{if(!map||!strokes.length||revealed)return;revealed=true;const result=scoreDrawing(strokes,map.borders.map(b=>b.points),config.scoreTolerance);$('score').innerHTML=`${result.score}<span>%</span>`;for(const metric of ['coverage','accuracy']){$(metric).textContent=`${Math.round(result[metric]*100)}%`;$(metric+'-bar').style.width=`${result[metric]*100}%`;}lastScore=result.score;highScores.record(config,result.score);leaderboard.submit(config,strokes);$('play-info').hidden=true;$('results').hidden=false;$('check').hidden=true;$('retry').hidden=false;$('truth-legend').hidden=false;translateState();update();updateView();render();};
 function syncRound(){
   $('results').hidden=!revealed;$('play-info').hidden=revealed;
   $('check').hidden=revealed;$('retry').hidden=!revealed;$('truth-legend').hidden=!revealed;
@@ -186,11 +189,11 @@ function syncRound(){
   }
   translateState();update();updateView();render();
 }
-$('retry').onclick=()=>{strokes=[];active=null;revealed=false;lastScore=null;panMode=false;transform={...fitTransform};syncRound();};
+$('retry').onclick=()=>{leaderboard.setMap(config);strokes=[];active=null;revealed=false;lastScore=null;panMode=false;transform={...fitTransform};syncRound();};
 async function loadMap(id){
   const version=++loadVersion;
   if(map)rounds.set(config.id,{strokes,revealed,lastScore});
-  config=MAPS[id];project=projection(config.latitude);
+  config=MAPS[id];project=projection(config.latitude);leaderboard.setMap(config);
   const saved=rounds.get(id)||{strokes:[],revealed:false,lastScore:null};
   ({strokes,revealed,lastScore}=saved);
   active=null;gesture=null;pointers.clear();panMode=false;map=null;loadFailed=false;transform=null;fitTransform=null;
