@@ -18,15 +18,18 @@ for(const item of Object.values(MAPS)){
   const button=document.createElement('button');button.type='button';button.className='map-menu-item';button.dataset.map=item.id;
   const name=document.createElement('span');name.className='map-menu-name';
   const best=document.createElement('span');best.className='map-menu-best';
-  button.append(name,best);button.addEventListener('click',()=>{if(config.id!==item.id||loadFailed)loadMap(item.id);});
-  $('map-menu').append(button);menuItems.set(item.id,{button,name,best});
+  const preview=document.createElement('img');preview.className='map-menu-preview';preview.src=`./assets/maps/${item.id}.svg`;preview.alt='';preview.draggable=false;
+  const shortName=document.createElement('span');shortName.className='map-menu-short';
+  button.append(preview,name,shortName,best);button.addEventListener('click',()=>{if(config.id!==item.id||loadFailed)loadMap(item.id);});
+  $('map-menu').append(button);menuItems.set(item.id,{button,name,shortName,best});
 }
 function updateMapMenu(){
   const fr=document.documentElement.lang==='fr';
-  for(const [id,{button,name,best}] of menuItems){
+  for(const [id,{button,name,shortName,best}] of menuItems){
     const item=MAPS[id],score=highScores.get(item);
     name.textContent=item.names[fr?1:0];
-    best.textContent=`${fr?'Record':'Best'} ${score===null?'—':score+'%'}`;
+    shortName.textContent=({europe:['Europe','Europe'],africa:['Maghreb','Maghreb'],'south-america':['South America','Amérique du Sud'],usa:['Northeast USA','Nord-Est USA'],france:['France','France']})[id][fr?1:0];
+    best.textContent=score===null?'—':score+'%';
     button.setAttribute('aria-label',`${name.textContent}, ${score===null?(fr?'pas encore de score':'no score yet'):(fr?'record':'best score')+' '+score+'%'}`);
     if(config.id===id)button.setAttribute('aria-current','true');else button.removeAttribute('aria-current');
   }
