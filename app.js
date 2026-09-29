@@ -34,7 +34,6 @@ function updateMapMenu(){
     button.setAttribute('aria-label',`${name.textContent}, ${score===null?(fr?'pas encore de score':'no score yet'):(fr?'record':'best score')+' '+score+'%'}`);
     if(config.id===id)button.setAttribute('aria-current','true');else button.removeAttribute('aria-current');
   }
-  $('scores-note').textContent=highScores.persistent?(fr?'Records personnels · ce navigateur':'Personal bests · this browser'):(fr?'Records personnels · cette session':'Personal bests · this session');
 }
 window.addEventListener('storage',updateMapMenu);
 let lastScore=null,loadFailed=false;

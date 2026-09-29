@@ -24,7 +24,6 @@ export const messages = {
 const french = [
   ['title','Borderline — Dessinez le monde de mémoire'],
   ['.header-note','Un peu de géographie. Beaucoup d’intuition.'],
-  ['.prototype','CARNET DE TERRAIN / 001'],
   ['.eyebrow','<span></span> LE DÉFI DES FRONTIÈRES'],
   ['h1','Vous avez le sens de l’orientation ?<br>À vous de jouer.'],
   ['.intro','La carte est là. Ses frontières ont disparu.<br>Redessinez-les, un trait à la fois.'],
@@ -40,7 +39,6 @@ const french = [
   ['#check','Vérifier mes frontières <span>↗</span>'],
   ['#retry','Réessayer <span>↻</span>'],
   ['details summary','Comment le score est-il calculé ?'],
-  ['footer','Pour les esprits curieux. <span>Pas seulement les cartographes.</span>'],
   ['.map-panel','Carte interactive pour tracer les frontières','aria-label'],
   ['#help','Afficher les instructions','aria-label'],['#help','Afficher les instructions','title'],
   ['#map','Tracez les frontières avec une souris, un stylet ou le doigt. La carte nécessite un dispositif de pointage.','aria-label'],
