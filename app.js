@@ -56,7 +56,8 @@ function translateState(){
   $('score-rule').textContent=fr
     ?`La couverture mesure la part des vraies frontières à moins d’environ ${config.scoreTolerance} km de vos traits ; la précision mesure la part de votre tracé à cette distance d’une vraie frontière. Le score est leur moyenne harmonique. Les distances et les limites sont simplifiées. Les îles sans frontière commune n’exigent aucun trait.`
     :`Coverage measures the share of real borders within about ${config.scoreTolerance} km of your lines; accuracy measures the share of your drawing that close to a real border. The score is their harmonic mean. Distances and boundaries are simplified. Islands without shared borders need no lines.`;
-  $('action-hint').textContent=t(revealed?'resultHint':'hint');
+  $('action-hint').hidden=!revealed;
+  $('action-hint').textContent=revealed?t('resultHint'):'';
   $('loading').textContent=t(loadFailed?'error':'loading');
   $('result-note').textContent=t('resultNote');
   if(lastScore!==null)$('verdict').textContent=t('verdicts')[lastScore>=85?3:lastScore>=60?2:lastScore>=30?1:0];

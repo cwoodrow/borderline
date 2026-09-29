@@ -2,7 +2,7 @@ export const messages = {
   en: {
     draw:'FREEHAND MODE',pan:'PAN MODE',revealed:'BORDERS REVEALED',
     leftOne:'land border left',leftMany:'land borders left',missingOne:'border not recognised',missingMany:'borders not recognised',
-    hint:'No timer. Just your mental map.',resultHint:'Every attempt makes the map a little more familiar.',
+    resultHint:'Every attempt makes the map a little more familiar.',
     verdicts:['A new perspective on the map.','A promising sense of direction.','You know your way around.','A cartographer at heart.'],
     resultNote:'The dashed green lines reveal the real borders. Missing borders reduce coverage; stray lines reduce accuracy.',
     help:'Drag to draw borders. Scroll or use +/− to zoom. Switch to Pan to move the map, or drag with the middle mouse button. On touchscreens, pinch with two fingers to zoom and move. Fit restores the full map.',
@@ -12,7 +12,7 @@ export const messages = {
   fr: {
     draw:'MODE DESSIN',pan:'MODE DÉPLACEMENT',revealed:'FRONTIÈRES RÉVÉLÉES',
     leftOne:'frontière restante',leftMany:'frontières restantes',missingOne:'frontière non reconnue',missingMany:'frontières non reconnues',
-    hint:'Pas de chrono. Juste votre mémoire.',resultHint:'À chaque essai, la carte devient un peu plus familière.',
+    resultHint:'À chaque essai, la carte devient un peu plus familière.',
     verdicts:['La carte sous un nouveau jour.','Un sens de l’orientation prometteur.','Vous avez de bons repères.','L’âme d’un cartographe.'],
     resultNote:'Les pointillés verts révèlent les vraies frontières. Les frontières manquantes réduisent la couverture ; les traits éloignés réduisent la précision.',
     help:'Faites glisser pour tracer les frontières. Zoomez avec la molette ou +/−. Activez Déplacer pour déplacer la carte, ou utilisez le bouton central de la souris. Sur écran tactile, pincez et déplacez avec deux doigts. Vue entière rétablit la carte complète.',
