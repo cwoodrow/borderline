@@ -15,7 +15,7 @@ export function createLeaderboard(){
  }
  function errorKey(error){return error.message==='rate_limited'?'rate':error.message==='invalid_nickname'?'invalid':error.message==='attempt_expired'?'expired':['drawing_too_large','drawing_outside_map','invalid_drawing'].includes(error.message)?'large':'unavailable';}
  function translate(){
-   $('podium-open').textContent=t('open')+' ↗';$('podium-title').textContent=t(pending?'qualified':'title');$('podium-map').textContent=mapName();
+   $('podium-open-label').textContent=t('open');$('podium-title').textContent=t(pending?'qualified':'title');$('podium-map').textContent=mapName();
    $('podium-close').setAttribute('aria-label',t('close'));
    $('podium-list-status').textContent=listState==='loading'?t('loading'):listState==='error'?t('unavailable'):entries.length?'':t('empty');
    $('podium-reload').textContent=t('retry');$('podium-reload').hidden=listState!=='error';
