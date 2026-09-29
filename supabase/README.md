@@ -9,7 +9,7 @@ A Supabase administrator must authenticate locally first. Never put a management
 ```sh
 npx supabase login
 node scripts/prepare-leaderboard.mjs
-npx supabase db query --project-ref zgacwqtkmvxjzipbhhvo --file supabase/migrations/202609280001_leaderboard.sql
+npx supabase db query --linked --project-ref zgacwqtkmvxjzipbhhvo --file supabase/migrations/202609280001_leaderboard.sql
 npx supabase functions deploy leaderboard --project-ref zgacwqtkmvxjzipbhhvo --use-api
 ```
 
@@ -41,7 +41,7 @@ npm test
 npx deno check supabase/functions/leaderboard/index.ts
 ```
 
-Additional development checks were run against temporary PostgreSQL (PGlite): ranking/pruning, ties, stale qualification, repeated claims, expiry, map separation, rate limits and blocked anonymous access. Browser tests use mocked API responses so no fake records are posted to the public leaderboard. Live deployment still needs an administrator login.
+Additional development checks were run against temporary PostgreSQL (PGlite): ranking/pruning, ties, stale qualification, repeated claims, expiry, map separation, rate limits and blocked anonymous access. Browser tests use mocked API responses so no fake records are posted to the public leaderboard. The backend is deployed. Live checks verified all five podiums, CORS, server-side score calculation, rejection of invalid drawings, and denied direct access to the tables and RPCs. No public test score was submitted.
 
 ## Administration
 

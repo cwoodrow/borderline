@@ -42,7 +42,7 @@ Submitted scores are stored per map in this browser using localStorage. Only imp
 
 ## World podium (Supabase)
 
-The global top 3 per map is implemented with anonymous submissions, server-side score verification, and a nickname prompt for qualifying attempts. Supabase backend deployment is required before enabling it on the live site; see [setup and operating notes](supabase/README.md). Local personal bests continue working if the service is unavailable.
+The global top 3 per map is implemented with anonymous submissions, server-side score verification, and a nickname prompt for qualifying attempts. The Supabase backend is deployed; see [setup and operating notes](supabase/README.md). Local personal bests continue working if the service is unavailable.
 
 ## Scoring
 
