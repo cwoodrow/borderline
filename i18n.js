@@ -23,7 +23,6 @@ export const messages = {
 // Only static, authored markup is translated as HTML; game state stays on its existing elements.
 const french = [
   ['title','Borderline — Dessinez le monde de mémoire'],
-  ['.header-note','Un peu de géographie. Beaucoup d’intuition.'],
   ['.eyebrow','<span></span> LE DÉFI DES FRONTIÈRES'],
   ['h1','Vous avez le sens de l’orientation ?<br>À vous de jouer.'],
   ['.intro','La carte est là. Ses frontières ont disparu.<br>Redessinez-les, un trait à la fois.'],
