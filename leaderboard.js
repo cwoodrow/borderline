@@ -1,11 +1,12 @@
+import {MAPS} from './maps.js';
 import {LEADERBOARD_CONFIG} from './leaderboard-config.js';
 const copy={
- en:{open:'World top 3',title:'World podium',loading:'Loading the podium…',empty:'No scores yet. Set the first record!',unavailable:'The world podium is unavailable. Your local best is safe.',retry:'Try again',checking:'Checking your score for the world top 3…',qualified:'A place on the podium!',prompt:'Enter your name or nickname to publish your score.',label:'Name / nickname',save:'Save my score',skip:'Not now',close:'Close',saving:'Saving…',saved:'Your score is on the podium!',missed:'The podium has changed. Your score no longer qualifies.',notQualified:'Score verified. Keep going for the top 3!',invalid:'Use 1–20 letters, numbers, spaces, apostrophes, dots or hyphens.',rate:'Too many attempts. Wait a minute and try again.',expired:'This attempt has expired. Submit your drawing again.',privacy:'Your nickname and score will be public. No account required.',rules:'Ties: the first published score keeps its place.',pending:'Enter my nickname',large:'Your drawing is too large or too far outside the map to submit.',score:'Verified score'},
- fr:{open:'Top 3 mondial',title:'Podium mondial',loading:'Chargement du podium…',empty:'Aucun score pour le moment. À vous le premier record !',unavailable:'Le podium mondial est indisponible. Votre record local est conservé.',retry:'Réessayer',checking:'Vérification de votre score pour le top 3 mondial…',qualified:'Une place sur le podium !',prompt:'Entrez votre nom ou pseudo pour publier votre score.',label:'Nom / pseudo',save:'Enregistrer mon score',skip:'Plus tard',close:'Fermer',saving:'Enregistrement…',saved:'Votre score est sur le podium !',missed:'Le podium a changé. Votre score ne suffit plus à y entrer.',notQualified:'Score vérifié. Continuez pour atteindre le top 3 !',invalid:'Utilisez 1 à 20 lettres, chiffres, espaces, apostrophes, points ou tirets.',rate:'Trop de tentatives. Patientez une minute avant de réessayer.',expired:'Cette tentative a expiré. Envoyez à nouveau votre tracé.',privacy:'Votre pseudo et votre score seront publics. Aucun compte nécessaire.',rules:'En cas d’égalité, le premier score publié garde sa place.',pending:'Saisir mon pseudo',large:'Votre tracé est trop volumineux ou trop éloigné de la carte pour être envoyé.',score:'Score vérifié'},
+ en:{open:'World top 3',title:'World leaderboards',loading:'Loading the podium…',empty:'No scores yet. Set the first record!',unavailable:'The world podium is unavailable. Your local best is safe.',retry:'Try again',checking:'Checking your score for the world top 3…',qualified:'A place on the podium!',prompt:'Enter your name or nickname to publish your score.',label:'Name / nickname',save:'Save my score',skip:'Not now',close:'Close',saving:'Saving…',saved:'Your score is on the podium!',missed:'The podium has changed. Your score no longer qualifies.',notQualified:'Score verified. Keep going for the top 3!',invalid:'Use 1–20 letters, numbers, spaces, apostrophes, dots or hyphens.',rate:'Too many attempts. Wait a minute and try again.',expired:'This attempt has expired. Submit your drawing again.',privacy:'Your nickname and score will be public. No account required.',rules:'Ties: the first published score keeps its place.',pending:'Enter my nickname',large:'Your drawing is too large or too far outside the map to submit.',score:'Verified score'},
+ fr:{open:'Top 3 mondial',title:'Classements mondiaux',loading:'Chargement du podium…',empty:'Aucun score pour le moment. À vous le premier record !',unavailable:'Le podium mondial est indisponible. Votre record local est conservé.',retry:'Réessayer',checking:'Vérification de votre score pour le top 3 mondial…',qualified:'Une place sur le podium !',prompt:'Entrez votre nom ou pseudo pour publier votre score.',label:'Nom / pseudo',save:'Enregistrer mon score',skip:'Plus tard',close:'Fermer',saving:'Enregistrement…',saved:'Votre score est sur le podium !',missed:'Le podium a changé. Votre score ne suffit plus à y entrer.',notQualified:'Score vérifié. Continuez pour atteindre le top 3 !',invalid:'Utilisez 1 à 20 lettres, chiffres, espaces, apostrophes, points ou tirets.',rate:'Trop de tentatives. Patientez une minute avant de réessayer.',expired:'Cette tentative a expiré. Envoyez à nouveau votre tracé.',privacy:'Votre pseudo et votre score seront publics. Aucun compte nécessaire.',rules:'En cas d’égalité, le premier score publié garde sa place.',pending:'Saisir mon pseudo',large:'Votre tracé est trop volumineux ou trop éloigné de la carte pour être envoyé.',score:'Score vérifié'},
 };
 export function createLeaderboard(){
  const $=id=>document.getElementById(id),dialog=$('podium-dialog');
- let current=null,sequence=0,loadSequence=0,entries=[],listState='idle',status='',pending=null,submission=null,busy=false,formError='';
+ let current=null,sequence=0,loadSequence=0,entries={},listState='idle',status='',pending=null,submission=null,busy=false,formError='';
  const t=key=>copy[document.documentElement.lang==='fr'?'fr':'en'][key];
  const mapName=()=>current?.names[document.documentElement.lang==='fr'?1:0]||'';
  async function api(body,map){
@@ -15,10 +16,11 @@ export function createLeaderboard(){
  }
  function errorKey(error){return error.message==='rate_limited'?'rate':error.message==='invalid_nickname'?'invalid':error.message==='attempt_expired'?'expired':['drawing_too_large','drawing_outside_map','invalid_drawing'].includes(error.message)?'large':'unavailable';}
  function translate(){
-   $('podium-open-label').textContent=t('open');$('podium-title').textContent=t(pending?'qualified':'title');$('podium-map').textContent=mapName();
+   $('podium-open-label').textContent=t('open');$('podium-title').textContent=t(pending?'qualified':'title');$('podium-map').textContent=pending?mapName():'';
    $('podium-close').setAttribute('aria-label',t('close'));
-   $('podium-list-status').textContent=listState==='loading'?t('loading'):listState==='error'?t('unavailable'):entries.length?'':t('empty');
+   $('podium-list-status').textContent=listState==='loading'?t('loading'):listState==='error'?t('unavailable'):'';
    $('podium-reload').textContent=t('retry');$('podium-reload').hidden=listState!=='error';
+   renderRankings();
    $('podium-rules').textContent=t('rules');$('nickname-prompt').textContent=t('prompt');$('nickname-label').textContent=t('label');$('nickname-privacy').textContent=t('privacy');
    $('nickname-score').textContent=pending?`${t('score')} : ${pending.score}%`:'';
    $('nickname-save').textContent=t(busy?'saving':'save');$('nickname-save').disabled=busy;
@@ -27,16 +29,34 @@ export function createLeaderboard(){
    $('world-score-status').textContent=status?t(status):'';
    $('world-score-retry').textContent=t(pending?'pending':'retry');$('world-score-retry').hidden=busy||!submission||(!pending&&!['unavailable','rate','expired'].includes(status));
  }
- async function refresh(){
-   if(!current)return;const ticket=++loadSequence,map=current.id;listState='loading';translate();
-   try{const data=await api(null,map);if(ticket!==loadSequence)return;
-     if(!Array.isArray(data.entries))throw Error('unavailable');entries=data.entries.slice(0,3);listState='ready';
-     $('podium-list').replaceChildren();for(const [i,entry] of entries.entries()){
-       const row=document.createElement('li'),rank=document.createElement('span'),name=document.createElement('span'),score=document.createElement('strong');
-       rank.textContent=['🥇','🥈','🥉'][i];name.textContent=String(entry.nickname);score.textContent=`${entry.score}%`;row.append(rank,name,score);$('podium-list').append(row);
+ function renderRankings(){
+   const container=$('podium-list');container.replaceChildren();
+   for(const config of Object.values(MAPS)){
+     const section=document.createElement('section'),heading=document.createElement('h3'),list=document.createElement('ol');
+     section.className='podium-card';heading.textContent=config.names[document.documentElement.lang==='fr'?1:0];section.append(heading);
+     const data=entries[config.id];
+     if(!data||data.error||!data.entries.length){
+       const message=document.createElement('p');message.textContent=t(!data?'loading':data.error?'unavailable':'empty');section.append(message);
+     }else{
+       for(const [i,entry] of data.entries.entries()){
+         const row=document.createElement('li'),rank=document.createElement('span'),name=document.createElement('span'),score=document.createElement('strong');
+         rank.textContent=['🥇','🥈','🥉'][i];name.textContent=String(entry.nickname);score.textContent=`${entry.score}%`;row.append(rank,name,score);list.append(row);
+       }
+       section.append(list);
      }
-   }catch{if(ticket!==loadSequence)return;listState='error';}
-   translate();
+     container.append(section);
+   }
+ }
+ async function refresh(){
+   const ticket=++loadSequence;entries={};listState='loading';translate();
+   await Promise.all(Object.values(MAPS).map(async config=>{
+     let result;
+     try{const data=await api(null,config.id);if(!Array.isArray(data.entries))throw Error('unavailable');result={entries:data.entries.slice(0,3)};}
+     catch{result={error:true};}
+     if(ticket!==loadSequence)return;entries[config.id]=result;translate();
+   }));
+   if(ticket!==loadSequence)return;
+   listState=Object.values(entries).some(data=>data.error)?'error':'ready';translate();
  }
  function open(){if(!dialog.open)dialog.showModal();translate();void refresh();if(pending)$('nickname').focus();}
  async function evaluate(){
@@ -60,7 +80,7 @@ export function createLeaderboard(){
    finally{if(ticket===sequence){busy=false;translate();}}
  });
  return {
-   setMap(config){sequence++;loadSequence++;current=config;entries=[];listState='idle';pending=null;submission=null;busy=false;status='';formError='';$('podium-list').replaceChildren();dialog.close();translate();},
+   setMap(config){sequence++;loadSequence++;current=config;entries={};listState='idle';pending=null;submission=null;busy=false;status='';formError='';$('podium-list').replaceChildren();dialog.close();translate();},
    submit(config,strokes){if(current?.id!==config.id)return;sequence++;pending=null;busy=false;formError='';submission={action:'evaluate',map:config.id,requestId:crypto.randomUUID(),strokes:structuredClone(strokes)};void evaluate();},
    translate,
  };
